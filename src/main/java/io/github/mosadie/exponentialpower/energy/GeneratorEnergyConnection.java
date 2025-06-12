@@ -1,15 +1,14 @@
-package io.github.mosadie.exponentialpower.energy.generator;
+package io.github.mosadie.exponentialpower.energy;
 
-import io.github.mosadie.exponentialpower.entities.BaseClasses.GeneratorBE;
+import io.github.mosadie.exponentialpower.entities.GeneratorEntity;
 import net.minecraftforge.energy.IEnergyStorage;
 
-public class ForgeEnergyConnection implements IEnergyStorage {
-	
-	private final GeneratorBE owner;
+public class GeneratorEnergyConnection implements IEnergyStorage {
+	private final GeneratorEntity owner;
 	private final boolean canExtract;
 	private final boolean canReceive;
 	
-	public ForgeEnergyConnection(GeneratorBE owner, boolean canExtract, boolean canReceive) {
+	public GeneratorEnergyConnection(GeneratorEntity owner, boolean canExtract, boolean canReceive) {
 		this.owner = owner;
 		this.canExtract = canExtract;
 		this.canReceive = canReceive;
@@ -33,7 +32,6 @@ public class ForgeEnergyConnection implements IEnergyStorage {
 			owner.setChanged();
 			return maxExtract;
 		}
-
 	}
 
 	@Override

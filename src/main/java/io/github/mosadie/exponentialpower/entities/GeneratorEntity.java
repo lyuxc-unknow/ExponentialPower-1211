@@ -1,10 +1,9 @@
-package io.github.mosadie.exponentialpower.entities.BaseClasses;
+package io.github.mosadie.exponentialpower.entities;
 
-import io.github.mosadie.exponentialpower.Config;
+import io.github.mosadie.exponentialpower.EnergyLevelConfig;
 import io.github.mosadie.exponentialpower.ExponentialPower;
-import io.github.mosadie.exponentialpower.container.ContainerEnderGeneratorBE;
-import io.github.mosadie.exponentialpower.energy.generator.ForgeEnergyConnection;
-import io.github.mosadie.exponentialpower.items.EnderCell;
+import io.github.mosadie.exponentialpower.container.GeneratorContainerMenu;
+import io.github.mosadie.exponentialpower.energy.GeneratorEnergyConnection;
 import io.github.mosadie.exponentialpower.setup.Registration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -17,7 +16,6 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,33 +30,26 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 
-public class GeneratorBE extends BaseContainerBlockEntity implements ICapabilityProvider {
-    public enum GeneratorTier {
-        REGULAR,
-        ADVANCED,
-    }
-
-    public final GeneratorTier tier;
+public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabilityProvider {
+    private final EnergyLevelConfig config;
     public double currentOutput = 0;
     public double energy = 0;
 
     public NonNullList<ItemStack> inventory = NonNullList.withSize(1, ItemStack.EMPTY);
 
-    private ForgeEnergyConnection fec;
-    private final LazyOptional<ForgeEnergyConnection> fecOptional = LazyOptional.of(() -> fec);
+    private GeneratorEnergyConnection energyConnection;
+    private final LazyOptional<GeneratorEnergyConnection> fecOptional = LazyOptional.of(() -> energyConnection);
 
-
-    public GeneratorBE(GeneratorTier tier, BlockPos pos, BlockState state) {
-        super(tier == GeneratorTier.ADVANCED ? Registration.ADV_ENDER_GENERATOR_BE.get() : Registration.ENDER_GENERATOR_BE.get(), pos, state);
-        this.tier = tier;
-        fec = new ForgeEnergyConnection(this, true, false);
+    public GeneratorEntity(BlockPos pos, BlockState state, EnergyLevelConfig config) {
+        super(config.getGeneratorBlockEntityType(), pos, state);
+        this.config = config;
+        energyConnection = new GeneratorEnergyConnection(this, true, false);
     }
 
     @Override
     @Nonnull
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> cap, @Nullable Direction f) {
-        if (cap == ForgeCapabilities.ENERGY) return fecOptional.cast();
-        return super.getCapability(cap, f);
+    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction direction) {
+        return capability == ForgeCapabilities.ENERGY ? fecOptional.cast() : super.getCapability(capability, direction);
     }
 
     @Override
@@ -67,12 +58,14 @@ public class GeneratorBE extends BaseContainerBlockEntity implements ICapability
         ListTag nbtTagList = new ListTag();
         int slotsSize = getContainerSize();
         for (int i = 0; i < slotsSize; i++) {
-            if (!getItem(i).isEmpty()) {
-                CompoundTag itemTag = new CompoundTag();
-                itemTag.putInt("Slot", i);
-                getItem(i).save(itemTag);
-                nbtTagList.add(itemTag);
+            ItemStack stack = getItem(i);
+            if (stack.isEmpty()) {
+                continue;
             }
+            CompoundTag itemTag = new CompoundTag();
+            itemTag.putInt("Slot", i);
+            stack.save(itemTag);
+            nbtTagList.add(itemTag);
         }
         nbt.put("Items", nbtTagList);
     }
@@ -98,37 +91,19 @@ public class GeneratorBE extends BaseContainerBlockEntity implements ICapability
         }
     }
 
-    public static <T extends BlockEntity> void tick(Level level, BlockPos blockPos, BlockState blockState, T t) {
-        if (t instanceof GeneratorBE generator) {
-            if (generator.getItem(0).getItem() instanceof EnderCell) {
-                generator.energy = generator.currentOutput;
+    public static <T extends BlockEntity> void tick(T tile) {
+        if (tile instanceof GeneratorEntity generator) {
+            if (generator.getItem(0).getItem() == Registration.ENDER_CELL.get()) {
                 generator.currentOutput = generator.calculateEnergy(generator.getItem(0).getCount());
-                if (generator.currentOutput == 0) generator.currentOutput = 1;
+                if (generator.currentOutput == 0) {
+                    generator.currentOutput = 1;
+                }
             } else {
                 generator.currentOutput = 0;
-                generator.energy = 0;
             }
+            generator.energy = generator.currentOutput;
             generator.handleSendingEnergy();
         }
-    }
-
-    @Override
-    public void clearContent() {
-        for (int i = 0; i < this.getContainerSize(); i++)
-            this.setItem(i, ItemStack.EMPTY);
-    }
-
-    @Override
-    protected @NotNull Component getDefaultName() {
-        if (tier == GeneratorTier.ADVANCED)
-            return Component.translatable(Registration.ADV_ENDER_GENERATOR.get().getDescriptionId());
-        else
-            return Component.translatable(Registration.ENDER_GENERATOR.get().getDescriptionId());
-    }
-
-    @Override
-    protected @NotNull AbstractContainerMenu createMenu(int windowId, @NotNull Inventory playerInv) {
-        return new ContainerEnderGeneratorBE(windowId, playerInv, this);
     }
 
     private void handleSendingEnergy() {
@@ -141,20 +116,47 @@ public class GeneratorBE extends BaseContainerBlockEntity implements ICapability
         if (energy <= 0) {
             return;
         }
-        for (Direction dir : Direction.values()) {
-            BlockPos targetBlock = getBlockPos().relative(dir);
-            BlockEntity blockEntity = level.getBlockEntity(targetBlock);
-            if (blockEntity == null) {
-                continue;
+        int distance = config.getGeneratorMaxDistance();
+        for (int i = -distance; i <= distance; i++) {
+            for (int j = -distance; j <= distance; j++) {
+                for (int k = -distance; k <= distance; k++) {
+                    if (i == 0 && j == 0 && k == 0) {
+                        continue;
+                    }
+                    BlockPos targetBlock = getBlockPos().offset(i, j, k);
+                    BlockEntity blockEntity = level.getBlockEntity(targetBlock);
+                    if (blockEntity == null) {
+                        continue;
+                    }
+                    if (blockEntity instanceof StorageEntity storage) {
+                        energy -= storage.acceptEnergy(energy);
+                        continue;
+                    }
+                    blockEntity.getCapability(ForgeCapabilities.ENERGY, Direction.getNearest(i, j, k).getOpposite()).resolve().
+                            filter(IEnergyStorage::canReceive)
+                            .ifPresent((cap) -> energy -= cap.receiveEnergy((int) (energy > Integer.MAX_VALUE ? Integer.MAX_VALUE : energy), false));
+
+                }
             }
-            if (blockEntity instanceof StorageBE storage) {
-                energy -= storage.acceptEnergy(energy);
-                continue;
-            }
-            blockEntity.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).resolve().
-                    filter(IEnergyStorage::canReceive)
-                    .ifPresent((cap) -> energy -= cap.receiveEnergy((int) (energy > Integer.MAX_VALUE ? Integer.MAX_VALUE : energy), false));
         }
+    }
+
+
+    @Override
+    public void clearContent() {
+        for (int i = 0; i < this.getContainerSize(); i++) {
+            this.setItem(i, ItemStack.EMPTY);
+        }
+    }
+
+    @Override
+    protected @NotNull Component getDefaultName() {
+        return Component.translatable(config.getGeneratorBlock().getDescriptionId());
+    }
+
+    @Override
+    protected @NotNull AbstractContainerMenu createMenu(int windowId, @NotNull Inventory playerInv) {
+        return new GeneratorContainerMenu(windowId, playerInv, this);
     }
 
     @Override
@@ -176,7 +178,6 @@ public class GeneratorBE extends BaseContainerBlockEntity implements ICapability
     public @NotNull ItemStack removeItem(int slot, int count) {
         if (slot < getContainerSize() && slot >= 0) {
             ItemStack stack = getItem(slot);
-
             if (count > stack.getCount()) {
                 setItem(slot, ItemStack.EMPTY);
                 return stack;
@@ -187,7 +188,6 @@ public class GeneratorBE extends BaseContainerBlockEntity implements ICapability
                 return newStack;
             }
         }
-
         return ItemStack.EMPTY;
     }
 
@@ -210,43 +210,18 @@ public class GeneratorBE extends BaseContainerBlockEntity implements ICapability
         return true;
     }
 
-    public double getBase() {
-        return switch (tier) {
-            case REGULAR -> Config.ENDER_GENERATOR_BASE.get();
-            case ADVANCED -> Config.ADV_ENDER_GENERATOR_BASE.get();
-        };
-    }
-
     public int getMaxStack() {
-        return switch (tier) {
-            case REGULAR -> Config.ENDER_GENERATOR_MAX_STACK.get();
-            case ADVANCED -> Config.ADV_ENDER_GENERATOR_MAX_STACK.get();
-        };
+        return config.getGeneratorMaxStack();
     }
 
     public double calculateEnergy(int itemStackCount) {
-        return switch (tier) {
-            case REGULAR -> longPow(getBase(), 63 * (itemStackCount / (double) getMaxStack())) - 1L;
-            case ADVANCED ->
-                    Math.pow(getBase(), 1023 * (itemStackCount / (double) getMaxStack())) * (2 - Math.pow(2, -52));
-        };
-    }
-
-    private long longPow(double a, double b) {
-        if (b == 0) {
-            return 1L;
-        }
-        if (b == 1) {
-            return (long) a;
-        }
-        return (long) Math.pow(a, b);
+        return config.calculateEnergy(itemStackCount);
     }
 
     @Override
     public boolean canPlaceItem(int slot, ItemStack stack) {
         return stack.getItem() == Registration.ENDER_CELL.get();
     }
-
 
     public Component getTitle() {
         return hasCustomName() ? getCustomName() : getDefaultName();

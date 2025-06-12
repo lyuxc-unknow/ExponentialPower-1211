@@ -1,6 +1,8 @@
 package io.github.mosadie.exponentialpower;
 
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.fml.config.ModConfig;
+import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 public class Config {
 
@@ -9,10 +11,12 @@ public class Config {
 	public static final String SUBCATEGORY_ENDER_GENERATOR_REGULAR = "regular";
 	public static ForgeConfigSpec.DoubleValue ENDER_GENERATOR_BASE;
 	public static ForgeConfigSpec.IntValue ENDER_GENERATOR_MAX_STACK;
+	public static ForgeConfigSpec.IntValue ENDER_GENERATOR_MAX_DISTANCE;
 
 	public static final String SUBCATEGORY_ENDER_GENERATOR_ADVANCED = "advanced";
 	public static ForgeConfigSpec.DoubleValue ADV_ENDER_GENERATOR_BASE;
 	public static ForgeConfigSpec.IntValue ADV_ENDER_GENERATOR_MAX_STACK;
+	public static ForgeConfigSpec.IntValue ADV_ENDER_GENERATOR_MAX_DISTANCE;
 
 	public static final String CATEGORY_ENDER_STORAGE = "storage";
 
@@ -32,12 +36,14 @@ public class Config {
 
 		SERVER_BUILDER.push(SUBCATEGORY_ENDER_GENERATOR_REGULAR);
 		ENDER_GENERATOR_BASE = SERVER_BUILDER.comment("Controls the rate of change of the power output. Remember Base^MaxStack-1 must be less than Long.MAX_VALUE for things to work correctly.").defineInRange("base", 2, 0, Double.MAX_VALUE);
-		ENDER_GENERATOR_MAX_STACK = SERVER_BUILDER.comment("Controls the number of Ender Cells required to reach the maximum power output.").defineInRange("maxStack", 64, 1 ,64);
+		ENDER_GENERATOR_MAX_STACK = SERVER_BUILDER.comment("Controls the number of Ender Cells required to reach the maximum power output.").defineInRange("maxStack", 64, 1, 64);
+		ENDER_GENERATOR_MAX_DISTANCE = SERVER_BUILDER.comment("Controls the chebyshev distance of remote transmission of energy by the Generator.").defineInRange("maxDistance", 3, 1, 64);
 		SERVER_BUILDER.pop();
 
 		SERVER_BUILDER.push(SUBCATEGORY_ENDER_GENERATOR_ADVANCED);
 		ADV_ENDER_GENERATOR_BASE = SERVER_BUILDER.comment("Controls the rate of change of the power output. Remember Base^MaxStack-1 must be less than Long.MAX_VALUE for things to work correctly.").defineInRange("base", 2, 0, Double.MAX_VALUE);
-		ADV_ENDER_GENERATOR_MAX_STACK = SERVER_BUILDER.comment("Controls the number of Ender Cells required to reach the maximum power output.").defineInRange("maxStack", 64, 1 ,64);
+		ADV_ENDER_GENERATOR_MAX_STACK = SERVER_BUILDER.comment("Controls the number of Ender Cells required to reach the maximum power output.").defineInRange("maxStack", 64, 1, 64);
+		ADV_ENDER_GENERATOR_MAX_DISTANCE = SERVER_BUILDER.comment("Controls the chebyshev distance of remote transmission of energy by the Generator.").defineInRange("maxDistance", 5, 1, 64);
 		SERVER_BUILDER.pop(2);
 
 		SERVER_BUILDER.comment("Ender Storage Settigns").push(CATEGORY_ENDER_STORAGE);
@@ -51,4 +57,7 @@ public class Config {
 		SERVER_CONFIG = SERVER_BUILDER.build();
 	}
 
+	public static void init(FMLJavaModLoadingContext context){
+		context.registerConfig(ModConfig.Type.SERVER, SERVER_CONFIG);
+	}
 }

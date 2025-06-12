@@ -1,6 +1,6 @@
 {
   "type": "minecraft:crafting_shaped",
-  "group": "exponentialpower",
+  "group": "ender_cell",
   "key": {
     "D": {
       "item": "minecraft:diamond_block"

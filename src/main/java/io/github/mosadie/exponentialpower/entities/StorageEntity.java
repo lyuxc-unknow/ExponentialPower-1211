@@ -1,8 +1,7 @@
-package io.github.mosadie.exponentialpower.entities.BaseClasses;
+package io.github.mosadie.exponentialpower.entities;
 
-import io.github.mosadie.exponentialpower.Config;
-import io.github.mosadie.exponentialpower.energy.storage.ForgeEnergyConnection;
-import io.github.mosadie.exponentialpower.setup.Registration;
+import io.github.mosadie.exponentialpower.EnergyLevelConfig;
+import io.github.mosadie.exponentialpower.energy.StorageEnergyConnection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
@@ -20,28 +19,20 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.EnumMap;
 
-public class StorageBE extends BlockEntity implements BlockEntityTicker<StorageBE> {
-
-    public enum StorageTier {
-        REGULAR,
-        ADVANCED,
-    }
-
-    public final StorageTier tier;
-
-    public double energy = 0;
+public class StorageEntity extends BlockEntity implements BlockEntityTicker<StorageEntity> {
+    private final EnergyLevelConfig config;
+    private double energy = 0;
     public EnumMap<Direction, Boolean> freezeExpend;
+    private final EnumMap<Direction, StorageEnergyConnection> fec;
+    private final EnumMap<Direction, LazyOptional<StorageEnergyConnection>> fecOptional;
 
-    private final EnumMap<Direction, ForgeEnergyConnection> fec;
-    private final EnumMap<Direction, LazyOptional<ForgeEnergyConnection>> fecOptional;
-
-    public StorageBE(StorageTier tier, BlockPos pos, BlockState state) {
-        super(tier == StorageTier.ADVANCED ? Registration.ADV_ENDER_STORAGE_BE.get() : Registration.ENDER_STORAGE_BE.get(), pos, state);
-        this.tier = tier;
+    public StorageEntity(BlockPos pos, BlockState state, EnergyLevelConfig config) {
+        super(config.getStorageBlockEntityType(), pos, state);
+        this.config = config;
         freezeExpend = new EnumMap<>(Direction.class);
         fec = new EnumMap<>(Direction.class);
         for (Direction dir : Direction.values()) {
-            fec.put(dir, new ForgeEnergyConnection(this, true, true, dir));
+            fec.put(dir, new StorageEnergyConnection(this, true, true, dir));
         }
 
         fecOptional = new EnumMap<>(Direction.class);
@@ -53,7 +44,6 @@ public class StorageBE extends BlockEntity implements BlockEntityTicker<StorageB
     @Override
     public void saveAdditional(@NotNull CompoundTag nbt) {
         super.saveAdditional(nbt);
-
         nbt.putDouble("energy", energy);
     }
 
@@ -71,7 +61,7 @@ public class StorageBE extends BlockEntity implements BlockEntityTicker<StorageB
     }
 
     @Override
-    public void tick(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull StorageBE storage) {
+    public void tick(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull StorageEntity storage) {
         if (energy > 0) {
             handleSendingEnergy();
         }
@@ -100,7 +90,7 @@ public class StorageBE extends BlockEntity implements BlockEntityTicker<StorageB
             if (entity == null) {
                 continue;
             }
-            if (entity instanceof StorageBE storage) {
+            if (entity instanceof StorageEntity storage) {
                 double difference = storage.acceptEnergy(energy);
                 energy -= difference;
                 if (difference > 0) {
@@ -118,20 +108,14 @@ public class StorageBE extends BlockEntity implements BlockEntityTicker<StorageB
         }
     }
 
-    public double getMaxEnergy() {
-        return switch (tier) {
-            case REGULAR -> Config.ENDER_STORAGE_MAX_ENERGY.get();
-            case ADVANCED -> Config.ADV_ENDER_STORAGE_MAX_ENERGY.get();
-        };
-    }
-
     public double acceptEnergy(double energyOffered) {
-        if (energy >= getMaxEnergy() || energyOffered <= 0) {
+        double maxEnergy = config.getMaxEnergy();
+        if (energy >= maxEnergy || energyOffered <= 0) {
             return 0;
         }
-        if (energy + energyOffered > getMaxEnergy()) {
-            double amountAccepted = getMaxEnergy() - energy;
-            energy = getMaxEnergy();
+        if (energy + energyOffered > maxEnergy) {
+            double amountAccepted = maxEnergy - energy;
+            energy = maxEnergy;
             return amountAccepted;
         }
         if (energy + energyOffered < 0) {
@@ -141,5 +125,17 @@ public class StorageBE extends BlockEntity implements BlockEntityTicker<StorageB
         }
         energy += energyOffered;
         return energyOffered;
+    }
+
+    public void setEnergy(double energy) {
+        this.energy = energy;
+    }
+
+    public double getEnergy() {
+        return energy;
+    }
+
+    public double getMaxEnergy() {
+        return config.getMaxEnergy();
     }
 }

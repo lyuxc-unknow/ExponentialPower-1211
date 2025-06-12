@@ -2,8 +2,8 @@ package io.github.mosadie.exponentialpower.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 import io.github.mosadie.exponentialpower.ExponentialPower;
-import io.github.mosadie.exponentialpower.container.ContainerEnderGeneratorBE;
-import io.github.mosadie.exponentialpower.entities.BaseClasses.GeneratorBE;
+import io.github.mosadie.exponentialpower.container.GeneratorContainerMenu;
+import io.github.mosadie.exponentialpower.entities.GeneratorEntity;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
@@ -12,16 +12,14 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class GUIEnderGeneratorBE extends AbstractContainerScreen<ContainerEnderGeneratorBE> {
-    private final GeneratorBE be;
+public class GeneratorContainerScreen extends AbstractContainerScreen<GeneratorContainerMenu> {
+    private final GeneratorEntity be;
 
     private final ResourceLocation GUI = ResourceLocation.fromNamespaceAndPath(ExponentialPower.MODID, "textures/gui/containerendergeneratorbe.png");
 
-    public GUIEnderGeneratorBE(ContainerEnderGeneratorBE container, Inventory playerInv, Component title) {
+    public GeneratorContainerScreen(GeneratorContainerMenu container, Inventory playerInv, Component title) {
         super(container, playerInv, title);
-
         be = container.getBlockEntity();
-
         this.imageWidth = 176;
         this.imageHeight = 166;
     }
@@ -43,8 +41,8 @@ public class GUIEnderGeneratorBE extends AbstractContainerScreen<ContainerEnderG
     protected void renderBg(@NotNull GuiGraphics graphics, float partialTicks, int x, int y) {
         renderBackground(graphics);
         RenderSystem.setShaderTexture(0, GUI);
-        int relX = (this.width - this.imageWidth) / 2;
-        int relY = (this.height - this.imageHeight) / 2;
-        graphics.blit(GUI, relX, relY, 0, 0, this.imageWidth, this.imageHeight);
+        int i = this.leftPos;
+        int j = (this.height - this.imageHeight) / 2;
+        graphics.blit(GUI, i, j, 0, 0, this.imageWidth, this.imageHeight);
     }
 }
