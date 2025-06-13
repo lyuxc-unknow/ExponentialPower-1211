@@ -29,15 +29,15 @@ public class StorageItem extends BlockItem {
         super.appendHoverText(stack, worldIn, tooltip, flagIn);
         double energy = 0;
         if (stack.hasTag()) {
-            CompoundTag blockEntityTag = stack.getTagElement("BlockEntityTag");
-            if (blockEntityTag != null && blockEntityTag.contains("energy")) {
-                energy = blockEntityTag.getDouble("energy");
+            CompoundTag tag = stack.getTagElement("BlockEntityTag");
+            if (tag != null && tag.contains("energy")) {
+                energy = tag.getDouble("energy");
             }
         }
-        double maxEnergy = config.getMaxEnergy();
-        tooltip.add(Component.translatable("item.exponentialpower.storage.tooltip.stored"));
-        tooltip.add(Component.literal(energy + "/" + maxEnergy));
-        double percent = ((int) (energy / maxEnergy * 10000.00)) / 100.00;
-        tooltip.add(Component.literal("(" + percent + "%)"));
+        double maxEnergy = config.getStorageMaxEnergy();
+        double percent = ((int) (energy / maxEnergy * 10000)) / 100.00;
+        tooltip.add(Component.translatable("item.exponentialpower.storage.tooltip.stored_percent", percent));
+        tooltip.add(Component.translatable("item.exponentialpower.storage.tooltip.stored_current", energy));
+        tooltip.add(Component.translatable("item.exponentialpower.storage.tooltip.stored_max", maxEnergy));
     }
 }

@@ -7,10 +7,10 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
-import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
+import net.minecraftforge.common.capabilities.ICapabilityProvider;
 import net.minecraftforge.common.util.LazyOptional;
 import net.minecraftforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.NotNull;
@@ -19,25 +19,18 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.EnumMap;
 
-public class StorageEntity extends BlockEntity implements BlockEntityTicker<StorageEntity> {
+public class StorageEntity extends BlockEntity implements ICapabilityProvider {
     private final EnergyLevelConfig config;
     private double energy = 0;
-    public EnumMap<Direction, Boolean> freezeExpend;
-    private final EnumMap<Direction, StorageEnergyConnection> fec;
-    private final EnumMap<Direction, LazyOptional<StorageEnergyConnection>> fecOptional;
+    private final EnumMap<Direction, Boolean> freezeExpend = new EnumMap<>(Direction.class);
+    private final EnumMap<Direction, LazyOptional<StorageEnergyConnection>> fecOptional = new EnumMap<>(Direction.class);
 
     public StorageEntity(BlockPos pos, BlockState state, EnergyLevelConfig config) {
         super(config.getStorageBlockEntityType(), pos, state);
         this.config = config;
-        freezeExpend = new EnumMap<>(Direction.class);
-        fec = new EnumMap<>(Direction.class);
-        for (Direction dir : Direction.values()) {
-            fec.put(dir, new StorageEnergyConnection(this, true, true, dir));
-        }
-
-        fecOptional = new EnumMap<>(Direction.class);
-        for (Direction dir : Direction.values()) {
-            fecOptional.put(dir, LazyOptional.of(() -> fec.get(dir)));
+        for (Direction direction : Direction.values()) {
+            freezeExpend.put(direction, false);
+            fecOptional.put(direction, LazyOptional.of(() -> new StorageEnergyConnection(this, direction)));
         }
     }
 
@@ -55,70 +48,70 @@ public class StorageEntity extends BlockEntity implements BlockEntityTicker<Stor
 
     @Override
     @Nonnull
-    public <T> LazyOptional<T> getCapability(@NotNull Capability<T> cap, @Nullable Direction dir) {
-        if (cap == ForgeCapabilities.ENERGY) return fecOptional.get((dir != null) ? dir : Direction.UP).cast();
-        return super.getCapability(cap, dir);
+    public <T> LazyOptional<T> getCapability(@NotNull Capability<T> capability, @Nullable Direction direction) {
+        if (capability == ForgeCapabilities.ENERGY) {
+            return fecOptional.get(direction != null ? direction : Direction.UP).cast();
+        }
+        return super.getCapability(capability, direction);
     }
 
-    @Override
-    public void tick(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @NotNull StorageEntity storage) {
-        if (energy > 0) {
-            handleSendingEnergy();
+    public static <T extends BlockEntity> void tick(T tile) {
+        if (tile instanceof StorageEntity storage) {
+            if (storage.energy > 0) {
+                storage.handleSendingEnergy();
+            }
         }
     }
 
     private void handleSendingEnergy() {
+        Level level = this.level;
         if (level == null) {
             return;
         }
         if (level.isClientSide) {
             return;
         }
-        if (energy <= 0) {
-            return;
-        }
-        for (Direction dir : Direction.values()) {
-            if (!freezeExpend.containsKey(dir)) {
-                freezeExpend.put(dir, false);
-            }
-            if (freezeExpend.get(dir)) {
-                freezeExpend.put(dir, false);
+        for (Direction direction : Direction.values()) {
+            if (freezeExpend.get(direction)) {
+                freezeExpend.put(direction, false);
                 continue;
             }
-            BlockPos targetBlock = getBlockPos().relative(dir);
-            BlockEntity entity = level.getBlockEntity(targetBlock);
+            BlockPos pos = getBlockPos().relative(direction);
+            BlockEntity entity = level.getBlockEntity(pos);
             if (entity == null) {
                 continue;
             }
             if (entity instanceof StorageEntity storage) {
-                double difference = storage.acceptEnergy(energy);
-                energy -= difference;
-                if (difference > 0) {
-                    freezeExpend.put(dir, true);
+                energy -= storage.acceptEnergy(energy);
+                if (energy <= 0) {
+                    return;
                 }
                 continue;
             }
-            entity.getCapability(ForgeCapabilities.ENERGY, dir.getOpposite()).filter(IEnergyStorage::canReceive).ifPresent((cap) -> {
-                int change = cap.receiveEnergy((int) (energy > Integer.MAX_VALUE ? Integer.MAX_VALUE : energy), false);
-                if (change > 0) {
-                    energy -= change;
-                    freezeExpend.put(dir, true);
+            IEnergyStorage storage = entity.getCapability(ForgeCapabilities.ENERGY, direction.getOpposite()).resolve().filter(IEnergyStorage::canReceive).orElse(null);
+            if (storage == null) {
+                continue;
+            }
+            for (int i = 0; i < config.getStorageTransmissionCount(); i++) {
+                energy -= storage.receiveEnergy((int) energy, false);
+                if (energy <= 0) {
+                    return;
                 }
-            });
+            }
         }
     }
 
     public double acceptEnergy(double energyOffered) {
-        double maxEnergy = config.getMaxEnergy();
+        double maxEnergy = config.getStorageMaxEnergy();
         if (energy >= maxEnergy || energyOffered <= 0) {
             return 0;
         }
-        if (energy + energyOffered > maxEnergy) {
+        if (energy + energyOffered >= maxEnergy) {
             double amountAccepted = maxEnergy - energy;
             energy = maxEnergy;
             return amountAccepted;
         }
-        if (energy + energyOffered < 0) {
+        if (energy + energyOffered < 0 || energy + energyOffered > Double.MAX_VALUE) {
             double amountAccepted = Double.MAX_VALUE - energy;
             energy = Double.MAX_VALUE;
             return amountAccepted;
@@ -127,15 +120,19 @@ public class StorageEntity extends BlockEntity implements BlockEntityTicker<Stor
         return energyOffered;
     }
 
-    public void setEnergy(double energy) {
-        this.energy = energy;
+    public double getMaxEnergy() {
+        return config.getStorageMaxEnergy();
     }
 
     public double getEnergy() {
         return energy;
     }
 
-    public double getMaxEnergy() {
-        return config.getMaxEnergy();
+    public void setEnergy(double energy) {
+        this.energy = energy;
+    }
+
+    public void freeze(Direction direction) {
+        this.freezeExpend.put(direction, true);
     }
 }

@@ -4,8 +4,18 @@
   "block.exponentialpower.ender_generator": "Ender Generator",
   "block.exponentialpower.ender_storage": "Ender Storage",
   "item.exponentialpower.ender_cell": "Ender Cell",
-  "item.exponentialpower.storage.tooltip.stored": "Current Energy Stored:",
+  "item.exponentialpower.ender_cell.tooltip1": "Materials used to make Ender Generator/Storage",
+  "item.exponentialpower.ender_cell.tooltip2": "Put it in (Mundane/Advanced) Ender Generator to increase power",
+  "item.exponentialpower.generator.tooltip.generated_max": "Max Generation : %s RF / tick",
+  "item.exponentialpower.generator.tooltip.output_max": "Max Output : %s RF / tick / direction",
+  "item.exponentialpower.generator.tooltip.transmission_range": "Remote Transmission Range : %s x %s x %s",
+  "item.exponentialpower.generator.tooltip.transmission_tips": "Remote transmission supports RF machines adjacent to the (Mundane/Advanced) Ender Storage",
+  "item.exponentialpower.storage.tooltip.stored_percent": "Energy Percent : %s %%",
+  "item.exponentialpower.storage.tooltip.stored_current": "Energy Stored : %s RF",
+  "item.exponentialpower.storage.tooltip.stored_max": "Max Energy : %s RF",
   "itemGroup.exponentialpower": "Exponential Power",
   "screen.exponentialpower.generator_rate": "Current Energy Generation:",
-  "screen.exponentialpower.storage_total": "Current Energy Stored: %s/%s RF (%s%%)"
+  "screen.exponentialpower.storage_total_percent": "Energy Percent : %s %%",
+  "screen.exponentialpower.storage_total_current": "Energy Stored : %s RF",
+  "screen.exponentialpower.storage_total_max": "Max Energy : %s RF"
 }

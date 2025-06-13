@@ -16,6 +16,7 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -28,22 +29,22 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabilityProvider {
     private final EnergyLevelConfig config;
-    public double currentOutput = 0;
-    public double energy = 0;
-
-    public NonNullList<ItemStack> inventory = NonNullList.withSize(1, ItemStack.EMPTY);
-
-    private GeneratorEnergyConnection energyConnection;
-    private final LazyOptional<GeneratorEnergyConnection> fecOptional = LazyOptional.of(() -> energyConnection);
+    private double currentOutput = 0;
+    private double energy = 0;
+    private final NonNullList<ItemStack> inventory = NonNullList.withSize(1, ItemStack.EMPTY);
+    private final LazyOptional<GeneratorEnergyConnection> fecOptional = LazyOptional.of(() -> new GeneratorEnergyConnection(this));
+    private final List<BlockPos> posList = new ArrayList<>();
+    private int tickCount = 100;
 
     public GeneratorEntity(BlockPos pos, BlockState state, EnergyLevelConfig config) {
         super(config.getGeneratorBlockEntityType(), pos, state);
         this.config = config;
-        energyConnection = new GeneratorEnergyConnection(this, true, false);
     }
 
     @Override
@@ -95,52 +96,103 @@ public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabi
         if (tile instanceof GeneratorEntity generator) {
             if (generator.getItem(0).getItem() == Registration.ENDER_CELL.get()) {
                 generator.currentOutput = generator.calculateEnergy(generator.getItem(0).getCount());
-                if (generator.currentOutput == 0) {
+                if (generator.currentOutput <= 0) {
                     generator.currentOutput = 1;
                 }
             } else {
                 generator.currentOutput = 0;
             }
             generator.energy = generator.currentOutput;
-            generator.handleSendingEnergy();
+            if (generator.energy > 0) {
+                generator.handleSendingEnergy();
+            }
         }
     }
 
     private void handleSendingEnergy() {
+        Level level = this.level;
         if (level == null) {
             return;
         }
         if (level.isClientSide) {
             return;
         }
-        if (energy <= 0) {
+        if (sendingToNoEnergy(getBlockPos(), level)) {//nearest first
             return;
         }
-        int distance = config.getGeneratorMaxDistance();
-        for (int i = -distance; i <= distance; i++) {
-            for (int j = -distance; j <= distance; j++) {
-                for (int k = -distance; k <= distance; k++) {
-                    if (i == 0 && j == 0 && k == 0) {
-                        continue;
-                    }
-                    BlockPos targetBlock = getBlockPos().offset(i, j, k);
-                    BlockEntity blockEntity = level.getBlockEntity(targetBlock);
-                    if (blockEntity == null) {
-                        continue;
-                    }
-                    if (blockEntity instanceof StorageEntity storage) {
-                        energy -= storage.acceptEnergy(energy);
-                        continue;
-                    }
-                    blockEntity.getCapability(ForgeCapabilities.ENERGY, Direction.getNearest(i, j, k).getOpposite()).resolve().
-                            filter(IEnergyStorage::canReceive)
-                            .ifPresent((cap) -> energy -= cap.receiveEnergy((int) (energy > Integer.MAX_VALUE ? Integer.MAX_VALUE : energy), false));
-
+        tickCount++;
+        if (tickCount >= 100) {//5s
+            tickCount = 0;
+            refreshStoragePosList();
+        }
+        for (BlockPos pos : posList) {
+            BlockEntity entity = level.getBlockEntity(pos);
+            if (entity instanceof StorageEntity storage) {
+                if (sendingToNoEnergy(pos, level)) {
+                    return;
+                }
+                energy -= storage.acceptEnergy(energy);
+                if (energy <= 0) {
+                    return;
                 }
             }
         }
     }
 
+    private void refreshStoragePosList() {
+        posList.clear();
+        int distance = config.getGeneratorMaxDistance();
+        for (int x = -distance; x <= distance; x++) {
+            for (int y = -distance; y <= distance; y++) {
+                for (int z = -distance; z <= distance; z++) {
+                    refreshStoragePosList(x, y, z);
+                }
+            }
+        }
+    }
+
+    private void refreshStoragePosList(int x, int y, int z) {
+        if (x == 0 && y == 0 && z == 0) {
+            return;
+        }
+        BlockPos targetBlock = getBlockPos().offset(x, y, z);
+        assert level != null;
+        BlockEntity entity = level.getBlockEntity(targetBlock);
+        if (entity == null) {
+            return;
+        }
+        if (entity instanceof StorageEntity) {
+            posList.add(targetBlock);
+        }
+    }
+
+    private boolean sendingToNoEnergy(BlockPos blockPos, Level level) {
+        for (Direction direction : Direction.values()) {
+            BlockPos pos = blockPos.relative(direction);
+            BlockEntity entity = level.getBlockEntity(pos);
+            if (entity == null) {
+                continue;
+            }
+            if (entity instanceof StorageEntity storage) {
+                energy -= storage.acceptEnergy(energy);
+                if (energy <= 0) {
+                    return true;
+                }
+                continue;
+            }
+            IEnergyStorage storage = entity.getCapability(ForgeCapabilities.ENERGY, direction.getOpposite()).resolve().filter(IEnergyStorage::canReceive).orElse(null);
+            if (storage == null) {
+                continue;
+            }
+            for (int i = 0; i < config.getGeneratorTransmissionCount(); i++) {
+                energy -= storage.receiveEnergy((int) energy, false);
+                if (energy <= 0) {
+                    return true;
+                }
+            }
+        }
+        return energy <= 0;
+    }
 
     @Override
     public void clearContent() {
@@ -225,5 +277,17 @@ public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabi
 
     public Component getTitle() {
         return hasCustomName() ? getCustomName() : getDefaultName();
+    }
+
+    public double getCurrentOutput() {
+        return currentOutput;
+    }
+
+    public double getEnergy() {
+        return energy;
+    }
+
+    public void setEnergy(double energy) {
+        this.energy = energy;
     }
 }

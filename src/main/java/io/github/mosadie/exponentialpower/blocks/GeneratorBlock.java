@@ -44,22 +44,12 @@ public class GeneratorBlock extends Block implements EntityBlock {
         return type == config.getGeneratorBlockEntityType() ? (l, p, s, tile) -> GeneratorEntity.tick(tile) : null;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public @NotNull InteractionResult use(@NotNull BlockState state, Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand handIn, @NotNull BlockHitResult hit) {
         if (!level.isClientSide) {
-            if (level.getBlockEntity(pos) instanceof GeneratorEntity generatorEntity) {
-                MenuProvider containerProvider = new MenuProvider() {
-                    @Override
-                    public @NotNull Component getDisplayName() {
-                        return generatorEntity.getTitle();
-                    }
-
-                    @Override
-                    public AbstractContainerMenu createMenu(int i, @NotNull Inventory playerInventory, @NotNull Player playerEntity) {
-                        return new GeneratorContainerMenu(i, playerInventory, generatorEntity);
-                    }
-                };
-                NetworkHooks.openScreen((ServerPlayer) player, containerProvider, generatorEntity.getBlockPos());
+            if (level.getBlockEntity(pos) instanceof GeneratorEntity entity) {
+                NetworkHooks.openScreen((ServerPlayer) player, new GUIMenuProvider(entity), entity.getBlockPos());
             } else {
                 throw new IllegalStateException("Our named container provider is missing!");
             }
@@ -78,6 +68,7 @@ public class GeneratorBlock extends Block implements EntityBlock {
         }
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public void onRemove(BlockState oldState, @NotNull Level level, @NotNull BlockPos pos, BlockState newState, boolean bool) {
         if (!oldState.is(newState.getBlock())) {
@@ -87,6 +78,18 @@ public class GeneratorBlock extends Block implements EntityBlock {
                 level.updateNeighbourForOutputSignal(pos, this);
             }
             super.onRemove(oldState, level, pos, newState, bool);
+        }
+    }
+
+    private record GUIMenuProvider(GeneratorEntity entity) implements MenuProvider {
+        @Override
+        public @NotNull Component getDisplayName() {
+            return entity.getTitle();
+        }
+
+        @Override
+        public AbstractContainerMenu createMenu(int i, @NotNull Inventory playerInventory, @NotNull Player playerEntity) {
+            return new GeneratorContainerMenu(i, playerInventory, entity);
         }
     }
 }

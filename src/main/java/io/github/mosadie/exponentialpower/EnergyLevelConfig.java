@@ -22,6 +22,11 @@ public abstract class EnergyLevelConfig {
         }
 
         @Override
+        public int getGeneratorTransmissionCount() {
+            return Config.ENDER_GENERATOR_TRANSMISSION_COUNT.get();
+        }
+
+        @Override
         public double calculateEnergy(int itemStackCount) {
             double base = Config.ENDER_GENERATOR_BASE.get();
             return longPow(base, 63 * (itemStackCount / (double) getGeneratorMaxStack())) - 1L;
@@ -48,8 +53,13 @@ public abstract class EnergyLevelConfig {
         }
 
         @Override
-        public double getMaxEnergy() {
+        public double getStorageMaxEnergy() {
             return Config.ENDER_STORAGE_MAX_ENERGY.get();
+        }
+
+        @Override
+        public int getStorageTransmissionCount() {
+            return Config.ENDER_STORAGE_TRANSMISSION_COUNT.get();
         }
     };
 
@@ -70,6 +80,11 @@ public abstract class EnergyLevelConfig {
         }
 
         @Override
+        public int getGeneratorTransmissionCount() {
+            return Config.ADV_ENDER_GENERATOR_TRANSMISSION_COUNT.get();
+        }
+
+        @Override
         public int getGeneratorMaxDistance() {
             return Config.ADV_ENDER_GENERATOR_MAX_DISTANCE.get();
         }
@@ -86,14 +101,21 @@ public abstract class EnergyLevelConfig {
         }
 
         @Override
-        public double getMaxEnergy() {
+        public double getStorageMaxEnergy() {
             return Config.ADV_ENDER_STORAGE_MAX_ENERGY.get();
+        }
+
+        @Override
+        public int getStorageTransmissionCount() {
+            return Config.ADV_ENDER_STORAGE_TRANSMISSION_COUNT.get();
         }
     };
 
     public abstract BlockEntityType<?> getGeneratorBlockEntityType();
 
     public abstract Block getGeneratorBlock();
+
+    public abstract int getGeneratorTransmissionCount();
 
     public abstract int getGeneratorMaxStack();
 
@@ -103,5 +125,7 @@ public abstract class EnergyLevelConfig {
 
     public abstract BlockEntityType<?> getStorageBlockEntityType();
 
-    public abstract double getMaxEnergy();
+    public abstract double getStorageMaxEnergy();
+
+    public abstract int getStorageTransmissionCount();
 }

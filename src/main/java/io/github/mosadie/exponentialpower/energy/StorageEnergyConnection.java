@@ -6,14 +6,10 @@ import net.minecraftforge.energy.IEnergyStorage;
 
 public class StorageEnergyConnection implements IEnergyStorage {
     private final StorageEntity owner;
-    private final boolean canExtract;
-    private final boolean canReceive;
     private final Direction direction;
 
-    public StorageEnergyConnection(StorageEntity owner, boolean canExtract, boolean canReceive, Direction dir) {
+    public StorageEnergyConnection(StorageEntity owner, Direction dir) {
         this.owner = owner;
-        this.canExtract = canExtract;
-        this.canReceive = canReceive;
         direction = dir;
     }
 
@@ -29,7 +25,7 @@ public class StorageEnergyConnection implements IEnergyStorage {
             owner.setEnergy(energy + energyReceived);
         }
         owner.setChanged();
-        owner.freezeExpend.put(direction, true);
+        owner.freeze(direction);
         return (int) energyReceived;
     }
 
@@ -61,11 +57,11 @@ public class StorageEnergyConnection implements IEnergyStorage {
 
     @Override
     public boolean canExtract() {
-        return canExtract;
+        return true;
     }
 
     @Override
     public boolean canReceive() {
-        return canReceive;
+        return true;
     }
 }

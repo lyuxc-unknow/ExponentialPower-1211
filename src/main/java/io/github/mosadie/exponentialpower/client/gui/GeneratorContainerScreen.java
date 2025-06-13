@@ -13,13 +13,12 @@ import net.minecraft.world.entity.player.Inventory;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneratorContainerScreen extends AbstractContainerScreen<GeneratorContainerMenu> {
-    private final GeneratorEntity be;
-
+    private final GeneratorEntity entity;
     private final ResourceLocation GUI = ResourceLocation.fromNamespaceAndPath(ExponentialPower.MODID, "textures/gui/containerendergeneratorbe.png");
 
     public GeneratorContainerScreen(GeneratorContainerMenu container, Inventory playerInv, Component title) {
         super(container, playerInv, title);
-        be = container.getBlockEntity();
+        entity = container.getBlockEntity();
         this.imageWidth = 176;
         this.imageHeight = 166;
     }
@@ -34,7 +33,7 @@ public class GeneratorContainerScreen extends AbstractContainerScreen<GeneratorC
     protected void renderLabels(@NotNull GuiGraphics graphics, int p_97809_, int p_97810_) {
         super.renderLabels(graphics, p_97809_, p_97810_);
         graphics.drawString(Minecraft.getInstance().font, Component.translatable("screen.exponentialpower.generator_rate"), 10, 53, 0xffffff);
-        graphics.drawString(Minecraft.getInstance().font, be.energy + " RF/t", 10, 63, 0xffffff);
+        graphics.drawString(Minecraft.getInstance().font, entity.getEnergy() + " RF/t", 10, 63, 0xffffff);
     }
 
     @Override

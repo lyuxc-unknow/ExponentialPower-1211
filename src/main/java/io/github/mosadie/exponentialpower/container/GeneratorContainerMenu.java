@@ -10,14 +10,13 @@ import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public class GeneratorContainerMenu extends AbstractContainerMenu {
+    private final GeneratorEntity entity;
 
-    private final GeneratorEntity be;
-
-    public GeneratorContainerMenu(int windowId, Inventory playerInv, GeneratorEntity be) {
+    public GeneratorContainerMenu(int windowId, Inventory playerInv, GeneratorEntity entity) {
         super(Registration.ENDER_GENERATOR_CONTAINER.get(), windowId);
-        this.be = be;
+        this.entity = entity;
         // Block Entity, Slot 0, Slot IDs 0
-        this.addSlot(new GeneratorSlot(be.getMaxStack(), be, 0, 80, 35));
+        this.addSlot(new GeneratorSlot(entity.getMaxStack(), entity, 0, 80, 35));
         // Player Inventory, Slot 9-35, Slot IDs 1-24
         for (int y = 0; y < 3; ++y) {
             for (int x = 0; x < 9; ++x) {
@@ -66,6 +65,6 @@ public class GeneratorContainerMenu extends AbstractContainerMenu {
     }
 
     public GeneratorEntity getBlockEntity() {
-        return be;
+        return entity;
     }
 }

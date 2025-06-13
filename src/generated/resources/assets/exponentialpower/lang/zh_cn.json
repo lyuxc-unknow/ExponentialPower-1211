@@ -4,8 +4,18 @@
   "block.exponentialpower.ender_generator": "末影发电机",
   "block.exponentialpower.ender_storage": "末影储能器",
   "item.exponentialpower.ender_cell": "末影单元",
-  "item.exponentialpower.storage.tooltip.stored": "储电量:",
+  "item.exponentialpower.ender_cell.tooltip1": "用来制作末影发电机/储能器的材料",
+  "item.exponentialpower.ender_cell.tooltip2": "放进(普通/高级)末影发电机以提高发电功率",
+  "item.exponentialpower.generator.tooltip.generated_max": "最大发电量 : %s RF / tick",
+  "item.exponentialpower.generator.tooltip.output_max": "最大输电量 : %s RF / tick / 方块贴面",
+  "item.exponentialpower.generator.tooltip.transmission_range": "远程输电范围 : %s x %s x %s",
+  "item.exponentialpower.generator.tooltip.transmission_tips": "远程输电支持所有与(普通/高级)末影储能器相邻的RF能源设备",
+  "item.exponentialpower.storage.tooltip.stored_percent": "百分比 : %s %%",
+  "item.exponentialpower.storage.tooltip.stored_current": "存电量 : %s RF",
+  "item.exponentialpower.storage.tooltip.stored_max": "满电量 : %s RF",
   "itemGroup.exponentialpower": "指数能源",
   "screen.exponentialpower.generator_rate": "发电量:",
-  "screen.exponentialpower.storage_total": "储电量: %s/%s RF (%s%%)"
+  "screen.exponentialpower.storage_total_percent": "百分比 : %s %%",
+  "screen.exponentialpower.storage_total_current": "存电量 : %s RF",
+  "screen.exponentialpower.storage_total_max": "满电量 : %s RF"
 }

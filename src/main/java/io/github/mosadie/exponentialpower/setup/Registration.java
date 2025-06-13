@@ -7,10 +7,11 @@ import io.github.mosadie.exponentialpower.blocks.StorageBlock;
 import io.github.mosadie.exponentialpower.container.GeneratorContainerMenu;
 import io.github.mosadie.exponentialpower.entities.GeneratorEntity;
 import io.github.mosadie.exponentialpower.entities.StorageEntity;
+import io.github.mosadie.exponentialpower.items.CellItem;
+import io.github.mosadie.exponentialpower.items.GeneratorItem;
 import io.github.mosadie.exponentialpower.items.StorageItem;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.inventory.MenuType;
-import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.Level;
@@ -51,9 +52,9 @@ public class Registration {
 
     // Items
 
-    public static final RegistryObject<Item> ENDER_CELL = ITEMS.register("ender_cell", () -> new Item(new Item.Properties().fireResistant().stacksTo(64)));
-    public static final RegistryObject<Item> ENDER_GENERATOR_ITEM = ITEMS.register("ender_generator", () -> new BlockItem(ENDER_GENERATOR.get(), new Item.Properties().fireResistant()));
-    public static final RegistryObject<Item> ADV_ENDER_GENERATOR_ITEM = ITEMS.register("advanced_ender_generator", () -> new BlockItem(ADV_ENDER_GENERATOR.get(), new Item.Properties().fireResistant()));
+    public static final RegistryObject<Item> ENDER_CELL = ITEMS.register("ender_cell", CellItem::new);
+    public static final RegistryObject<Item> ENDER_GENERATOR_ITEM = ITEMS.register("ender_generator", () -> new GeneratorItem(ENDER_GENERATOR.get(), EnergyLevelConfig.REGULAR));
+    public static final RegistryObject<Item> ADV_ENDER_GENERATOR_ITEM = ITEMS.register("advanced_ender_generator", () -> new GeneratorItem(ADV_ENDER_GENERATOR.get(), EnergyLevelConfig.ADVANCED));
     public static final RegistryObject<Item> ENDER_STORAGE_ITEM = ITEMS.register("ender_storage", () -> new StorageItem(ENDER_STORAGE.get(), EnergyLevelConfig.REGULAR));
     public static final RegistryObject<Item> ADV_ENDER_STORAGE_ITEM = ITEMS.register("advanced_ender_storage", () -> new StorageItem(ADV_ENDER_STORAGE.get(), EnergyLevelConfig.ADVANCED));
 
@@ -68,6 +69,7 @@ public class Registration {
 
     public static final RegistryObject<MenuType<GeneratorContainerMenu>> ENDER_GENERATOR_CONTAINER = CONTAINERS.register("ender_generator", () -> IForgeMenuType.create((windowId, inv, data) -> {
         BlockPos pos = data.readBlockPos();
+        //noinspection resource
         Level level = inv.player.level();
         GeneratorEntity te = (GeneratorEntity) level.getBlockEntity(pos);
         return new GeneratorContainerMenu(windowId, inv, te);
