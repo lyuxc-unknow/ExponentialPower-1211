@@ -58,7 +58,6 @@ public class GeneratorBlock extends Block implements EntityBlock {
     @Override
     public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @Nullable LivingEntity placer, @NotNull ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        // Custom name handling is done automatically by parent class in 1.21.1
     }
 
     @Override

@@ -1,7 +1,6 @@
 package io.github.mosadie.exponentialpower.entities;
 
 import io.github.mosadie.exponentialpower.EnergyLevelConfig;
-import io.github.mosadie.exponentialpower.ExponentialPower;
 import io.github.mosadie.exponentialpower.container.GeneratorContainerMenu;
 import io.github.mosadie.exponentialpower.energy.GeneratorEnergyConnection;
 import io.github.mosadie.exponentialpower.setup.Registration;
@@ -10,9 +9,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.world.ContainerHelper;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
@@ -46,40 +44,13 @@ public class GeneratorEntity extends BaseContainerBlockEntity {
     @Override
     protected void saveAdditional(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider registries) {
         super.saveAdditional(nbt, registries);
-        ListTag nbtTagList = new ListTag();
-        int slotsSize = getContainerSize();
-        for (int i = 0; i < slotsSize; i++) {
-            ItemStack stack = getItem(i);
-            if (stack.isEmpty()) {
-                continue;
-            }
-            CompoundTag itemTag = new CompoundTag();
-            itemTag.putInt("Slot", i);
-            stack.save(registries, itemTag);
-            nbtTagList.add(itemTag);
-        }
-        nbt.put("Items", nbtTagList);
+        ContainerHelper.saveAllItems(nbt, inventory, registries);
     }
 
     @Override
     protected void loadAdditional(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider registries) {
         super.loadAdditional(nbt, registries);
-        ListTag tagList;
-        if (nbt.contains("Items", Tag.TAG_COMPOUND)) { // Load older NBT item structure.
-            ExponentialPower.LOGGER.warn("Upgrading old NBT item tag on save!");
-            tagList = nbt.getCompound("Items").getList("Items", Tag.TAG_COMPOUND);
-        } else if (nbt.contains("Items", Tag.TAG_LIST)) {
-            tagList = nbt.getList("Items", Tag.TAG_COMPOUND);
-        } else {
-            return;
-        }
-        for (int i = 0; i < tagList.size(); i++) {
-            CompoundTag itemTags = tagList.getCompound(i);
-            int slot = itemTags.getInt("Slot");
-            if (slot >= 0 && slot < getContainerSize()) {
-                setItem(slot, ItemStack.parse(registries, itemTags).orElse(ItemStack.EMPTY));
-            }
-        }
+        ContainerHelper.loadAllItems(nbt, inventory, registries);
     }
 
     public static <T extends BlockEntity> void tick(T tile) {
@@ -222,11 +193,13 @@ public class GeneratorEntity extends BaseContainerBlockEntity {
             ItemStack stack = getItem(slot);
             if (count > stack.getCount()) {
                 setItem(slot, ItemStack.EMPTY);
+                setChanged();
                 return stack;
             } else {
                 ItemStack newStack = stack.copy();
                 newStack.setCount(count);
                 stack.setCount(stack.getCount() - count);
+                setChanged();
                 return newStack;
             }
         }
@@ -244,6 +217,7 @@ public class GeneratorEntity extends BaseContainerBlockEntity {
     public void setItem(int slot, @NotNull ItemStack item) {
         if (slot < getContainerSize() && slot >= 0) {
             inventory.set(slot, item);
+            setChanged();
         }
     }
 
@@ -291,6 +265,7 @@ public class GeneratorEntity extends BaseContainerBlockEntity {
 
     public void setEnergy(double energy) {
         this.energy = energy;
+        setChanged();
     }
 
     public GeneratorEnergyConnection getEnergyStorage() {

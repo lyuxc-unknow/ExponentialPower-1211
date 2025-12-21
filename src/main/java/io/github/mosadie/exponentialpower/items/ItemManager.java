@@ -13,7 +13,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 public class ItemManager {
     private static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ExponentialPower.MODID);
 
-    private static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = CREATIVE_MODE_TABS.register("exponentialpower", () -> CreativeModeTab.builder()
+    private static final DeferredHolder<CreativeModeTab, CreativeModeTab> EXPONENTIALPOWER_TAB = CREATIVE_MODE_TABS.register(ExponentialPower.MODID, () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.exponentialpower"))
             .icon(() -> new ItemStack(Registration.ENDER_CELL.get()))
             .displayItems((parameters, output) -> {

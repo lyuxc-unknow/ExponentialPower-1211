@@ -96,14 +96,17 @@ public class StorageEntity extends BlockEntity {
         if (energy + energyOffered >= maxEnergy) {
             double amountAccepted = maxEnergy - energy;
             energy = maxEnergy;
+            setChanged();
             return amountAccepted;
         }
         if (energy + energyOffered < 0 || energy + energyOffered > Double.MAX_VALUE) {
             double amountAccepted = Double.MAX_VALUE - energy;
             energy = Double.MAX_VALUE;
+            setChanged();
             return amountAccepted;
         }
         energy += energyOffered;
+        setChanged();
         return energyOffered;
     }
 
@@ -117,6 +120,7 @@ public class StorageEntity extends BlockEntity {
 
     public void setEnergy(double energy) {
         this.energy = energy;
+        setChanged();
     }
 
     public void freeze(Direction direction) {
