@@ -5,7 +5,6 @@ import io.github.mosadie.exponentialpower.container.GeneratorContainerMenu;
 import io.github.mosadie.exponentialpower.entities.GeneratorEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.*;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
@@ -20,7 +19,6 @@ import net.minecraft.world.level.block.entity.BlockEntityTicker;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
-import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
@@ -44,12 +42,11 @@ public class GeneratorBlock extends Block implements EntityBlock {
         return type == config.getGeneratorBlockEntityType() ? (l, p, s, tile) -> GeneratorEntity.tick(tile) : null;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public @NotNull InteractionResult use(@NotNull BlockState state, Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand handIn, @NotNull BlockHitResult hit) {
+    protected @NotNull InteractionResult useWithoutItem(@NotNull BlockState state, Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull BlockHitResult hit) {
         if (!level.isClientSide) {
             if (level.getBlockEntity(pos) instanceof GeneratorEntity entity) {
-                NetworkHooks.openScreen((ServerPlayer) player, new GUIMenuProvider(entity), entity.getBlockPos());
+                player.openMenu(new GUIMenuProvider(entity), entity.getBlockPos());
             } else {
                 throw new IllegalStateException("Our named container provider is missing!");
             }
@@ -59,16 +56,11 @@ public class GeneratorBlock extends Block implements EntityBlock {
 
 
     @Override
-    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
-        if (stack.hasCustomHoverName()) {
-            BlockEntity te = level.getBlockEntity(pos);
-            if (te instanceof GeneratorEntity generatorEntity) {
-                generatorEntity.setCustomName(stack.getHoverName());
-            }
-        }
+    public void setPlacedBy(@NotNull Level level, @NotNull BlockPos pos, @NotNull BlockState state, @Nullable LivingEntity placer, @NotNull ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        // Custom name handling is done automatically by parent class in 1.21.1
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void onRemove(BlockState oldState, @NotNull Level level, @NotNull BlockPos pos, BlockState newState, boolean bool) {
         if (!oldState.is(newState.getBlock())) {

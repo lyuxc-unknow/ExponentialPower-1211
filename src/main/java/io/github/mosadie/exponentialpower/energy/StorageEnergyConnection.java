@@ -2,7 +2,7 @@ package io.github.mosadie.exponentialpower.energy;
 
 import io.github.mosadie.exponentialpower.entities.StorageEntity;
 import net.minecraft.core.Direction;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 
 public class StorageEnergyConnection implements IEnergyStorage {
     private final StorageEntity owner;

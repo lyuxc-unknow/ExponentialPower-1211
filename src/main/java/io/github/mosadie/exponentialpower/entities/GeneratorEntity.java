@@ -7,6 +7,7 @@ import io.github.mosadie.exponentialpower.energy.GeneratorEnergyConnection;
 import io.github.mosadie.exponentialpower.setup.Registration;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.NonNullList;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
@@ -20,25 +21,20 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BaseContainerBlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabilityProvider {
+public class GeneratorEntity extends BaseContainerBlockEntity {
     private final EnergyLevelConfig config;
     private double currentOutput = 0;
     private double energy = 0;
     private final NonNullList<ItemStack> inventory = NonNullList.withSize(1, ItemStack.EMPTY);
-    private final LazyOptional<GeneratorEnergyConnection> fecOptional = LazyOptional.of(() -> new GeneratorEnergyConnection(this));
+    private final GeneratorEnergyConnection energyStorage = new GeneratorEnergyConnection(this);
     private final List<BlockPos> posList = new ArrayList<>();
     private int tickCount = 100;
 
@@ -48,14 +44,8 @@ public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabi
     }
 
     @Override
-    @Nonnull
-    public <T> LazyOptional<T> getCapability(@Nonnull Capability<T> capability, @Nullable Direction direction) {
-        return capability == ForgeCapabilities.ENERGY ? fecOptional.cast() : super.getCapability(capability, direction);
-    }
-
-    @Override
-    public void saveAdditional(@NotNull CompoundTag nbt) {
-        super.saveAdditional(nbt);
+    protected void saveAdditional(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider registries) {
+        super.saveAdditional(nbt, registries);
         ListTag nbtTagList = new ListTag();
         int slotsSize = getContainerSize();
         for (int i = 0; i < slotsSize; i++) {
@@ -65,15 +55,15 @@ public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabi
             }
             CompoundTag itemTag = new CompoundTag();
             itemTag.putInt("Slot", i);
-            stack.save(itemTag);
+            stack.save(registries, itemTag);
             nbtTagList.add(itemTag);
         }
         nbt.put("Items", nbtTagList);
     }
 
     @Override
-    public void load(@NotNull CompoundTag nbt) {
-        super.load(nbt);
+    protected void loadAdditional(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider registries) {
+        super.loadAdditional(nbt, registries);
         ListTag tagList;
         if (nbt.contains("Items", Tag.TAG_COMPOUND)) { // Load older NBT item structure.
             ExponentialPower.LOGGER.warn("Upgrading old NBT item tag on save!");
@@ -87,7 +77,7 @@ public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabi
             CompoundTag itemTags = tagList.getCompound(i);
             int slot = itemTags.getInt("Slot");
             if (slot >= 0 && slot < getContainerSize()) {
-                setItem(slot, ItemStack.of(itemTags));
+                setItem(slot, ItemStack.parse(registries, itemTags).orElse(ItemStack.EMPTY));
             }
         }
     }
@@ -180,8 +170,8 @@ public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabi
                 }
                 continue;
             }
-            IEnergyStorage storage = entity.getCapability(ForgeCapabilities.ENERGY, direction.getOpposite()).resolve().filter(IEnergyStorage::canReceive).orElse(null);
-            if (storage == null) {
+            IEnergyStorage storage = level.getCapability(Capabilities.EnergyStorage.BLOCK, pos, direction.getOpposite());
+            if (storage == null || !storage.canReceive()) {
                 continue;
             }
             for (int i = 0; i < config.getGeneratorTransmissionCount(); i++) {
@@ -258,6 +248,18 @@ public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabi
     }
 
     @Override
+    public void setItems(NonNullList<ItemStack> items) {
+        for (int i = 0; i < items.size() && i < inventory.size(); i++) {
+            inventory.set(i, items.get(i));
+        }
+    }
+
+    @Override
+    public @NotNull NonNullList<ItemStack> getItems() {
+        return inventory;
+    }
+
+    @Override
     public boolean stillValid(@NotNull Player player) {
         return true;
     }
@@ -289,5 +291,9 @@ public class GeneratorEntity extends BaseContainerBlockEntity implements ICapabi
 
     public void setEnergy(double energy) {
         this.energy = energy;
+    }
+
+    public GeneratorEnergyConnection getEnergyStorage() {
+        return energyStorage;
     }
 }

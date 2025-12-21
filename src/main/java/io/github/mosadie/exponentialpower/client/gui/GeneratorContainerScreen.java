@@ -38,7 +38,6 @@ public class GeneratorContainerScreen extends AbstractContainerScreen<GeneratorC
 
     @Override
     protected void renderBg(@NotNull GuiGraphics graphics, float partialTicks, int x, int y) {
-        renderBackground(graphics);
         RenderSystem.setShaderTexture(0, GUI);
         int i = this.leftPos;
         int j = (this.height - this.imageHeight) / 2;

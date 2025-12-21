@@ -4,7 +4,6 @@ import io.github.mosadie.exponentialpower.EnergyLevelConfig;
 import io.github.mosadie.exponentialpower.entities.StorageEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
@@ -37,9 +36,8 @@ public class StorageBlock extends Block implements EntityBlock {
         return type == config.getStorageBlockEntityType() ? (l, p, s, tile) -> StorageEntity.tick(tile) : null;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public @NotNull InteractionResult use(@NotNull BlockState state, Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull InteractionHand handIn, BlockHitResult hit) {
+    protected @NotNull InteractionResult useWithoutItem(@NotNull BlockState state, Level level, @NotNull BlockPos pos, @NotNull Player player, @NotNull BlockHitResult hit) {
         if (!level.isClientSide) {
             StorageEntity te = (StorageEntity) level.getBlockEntity(pos);
             if (te == null) {

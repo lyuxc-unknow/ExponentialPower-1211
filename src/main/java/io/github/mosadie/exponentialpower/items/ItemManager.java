@@ -6,14 +6,14 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.registries.DeferredRegister;
-import net.minecraftforge.registries.RegistryObject;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.registries.DeferredRegister;
+import net.neoforged.neoforge.registries.DeferredHolder;
 
 public class ItemManager {
     private static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS = DeferredRegister.create(Registries.CREATIVE_MODE_TAB, ExponentialPower.MODID);
 
-    private static final RegistryObject<CreativeModeTab> TAB = CREATIVE_MODE_TABS.register("exponentialpower", () -> CreativeModeTab.builder()
+    private static final DeferredHolder<CreativeModeTab, CreativeModeTab> TAB = CREATIVE_MODE_TABS.register("exponentialpower", () -> CreativeModeTab.builder()
             .title(Component.translatable("itemGroup.exponentialpower"))
             .icon(() -> new ItemStack(Registration.ENDER_CELL.get()))
             .displayItems((parameters, output) -> {
@@ -26,7 +26,7 @@ public class ItemManager {
             .build()
     );
 
-    public static void init(FMLJavaModLoadingContext context) {
-        CREATIVE_MODE_TABS.register(context.getModEventBus());
+    public static void init(IEventBus modEventBus) {
+        CREATIVE_MODE_TABS.register(modEventBus);
     }
 }

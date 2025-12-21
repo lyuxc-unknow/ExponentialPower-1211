@@ -1,39 +1,39 @@
 package io.github.mosadie.exponentialpower;
 
-import net.minecraftforge.common.ForgeConfigSpec;
-import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.neoforged.neoforge.common.ModConfigSpec;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.config.ModConfig;
 
 public class Config {
 
     public static final String CATEGORY_ENDER_GENERATOR = "generator";
 
     public static final String SUBCATEGORY_ENDER_GENERATOR_REGULAR = "regular";
-    public static ForgeConfigSpec.DoubleValue ENDER_GENERATOR_BASE;
-    public static ForgeConfigSpec.IntValue ENDER_GENERATOR_MAX_STACK;
-    public static ForgeConfigSpec.IntValue ENDER_GENERATOR_TRANSMISSION_COUNT;
-    public static ForgeConfigSpec.IntValue ENDER_GENERATOR_MAX_DISTANCE;
+    public static ModConfigSpec.DoubleValue ENDER_GENERATOR_BASE;
+    public static ModConfigSpec.IntValue ENDER_GENERATOR_MAX_STACK;
+    public static ModConfigSpec.IntValue ENDER_GENERATOR_TRANSMISSION_COUNT;
+    public static ModConfigSpec.IntValue ENDER_GENERATOR_MAX_DISTANCE;
 
     public static final String SUBCATEGORY_ENDER_GENERATOR_ADVANCED = "advanced";
-    public static ForgeConfigSpec.DoubleValue ADV_ENDER_GENERATOR_BASE;
-    public static ForgeConfigSpec.IntValue ADV_ENDER_GENERATOR_MAX_STACK;
-    public static ForgeConfigSpec.IntValue ADV_ENDER_GENERATOR_TRANSMISSION_COUNT;
-    public static ForgeConfigSpec.IntValue ADV_ENDER_GENERATOR_MAX_DISTANCE;
+    public static ModConfigSpec.DoubleValue ADV_ENDER_GENERATOR_BASE;
+    public static ModConfigSpec.IntValue ADV_ENDER_GENERATOR_MAX_STACK;
+    public static ModConfigSpec.IntValue ADV_ENDER_GENERATOR_TRANSMISSION_COUNT;
+    public static ModConfigSpec.IntValue ADV_ENDER_GENERATOR_MAX_DISTANCE;
 
     public static final String CATEGORY_ENDER_STORAGE = "storage";
 
     public static final String SUBCATEGORY_ENDER_STORAGE_REGULAR = "regular";
-    public static ForgeConfigSpec.LongValue ENDER_STORAGE_MAX_ENERGY;
-    public static ForgeConfigSpec.IntValue ENDER_STORAGE_TRANSMISSION_COUNT;
+    public static ModConfigSpec.LongValue ENDER_STORAGE_MAX_ENERGY;
+    public static ModConfigSpec.IntValue ENDER_STORAGE_TRANSMISSION_COUNT;
 
     public static final String SUBCATEGORY_ENDER_STORAGE_ADVANCED = "advanced";
-    public static ForgeConfigSpec.DoubleValue ADV_ENDER_STORAGE_MAX_ENERGY;
-    public static ForgeConfigSpec.IntValue ADV_ENDER_STORAGE_TRANSMISSION_COUNT;
+    public static ModConfigSpec.DoubleValue ADV_ENDER_STORAGE_MAX_ENERGY;
+    public static ModConfigSpec.IntValue ADV_ENDER_STORAGE_TRANSMISSION_COUNT;
 
-    public static ForgeConfigSpec SERVER_CONFIG;
+    public static ModConfigSpec SERVER_CONFIG;
 
     static {
-        ForgeConfigSpec.Builder SERVER_BUILDER = new ForgeConfigSpec.Builder();
+        ModConfigSpec.Builder SERVER_BUILDER = new ModConfigSpec.Builder();
 
         SERVER_BUILDER.comment("Ender Generator Settings").push(CATEGORY_ENDER_GENERATOR);
 
@@ -64,7 +64,7 @@ public class Config {
         SERVER_CONFIG = SERVER_BUILDER.build();
     }
 
-    public static void init(FMLJavaModLoadingContext context) {
-        context.registerConfig(ModConfig.Type.SERVER, SERVER_CONFIG);
+    public static void init(ModContainer modContainer) {
+        modContainer.registerConfig(ModConfig.Type.SERVER, SERVER_CONFIG);
     }
 }

@@ -4,55 +4,42 @@ import io.github.mosadie.exponentialpower.EnergyLevelConfig;
 import io.github.mosadie.exponentialpower.energy.StorageEnergyConnection;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraftforge.common.capabilities.Capability;
-import net.minecraftforge.common.capabilities.ForgeCapabilities;
-import net.minecraftforge.common.capabilities.ICapabilityProvider;
-import net.minecraftforge.common.util.LazyOptional;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.EnumMap;
 
-public class StorageEntity extends BlockEntity implements ICapabilityProvider {
+public class StorageEntity extends BlockEntity {
     private final EnergyLevelConfig config;
     private double energy = 0;
     private final EnumMap<Direction, Boolean> freezeExpend = new EnumMap<>(Direction.class);
-    private final EnumMap<Direction, LazyOptional<StorageEnergyConnection>> fecOptional = new EnumMap<>(Direction.class);
+    private final EnumMap<Direction, StorageEnergyConnection> energyStorages = new EnumMap<>(Direction.class);
 
     public StorageEntity(BlockPos pos, BlockState state, EnergyLevelConfig config) {
         super(config.getStorageBlockEntityType(), pos, state);
         this.config = config;
         for (Direction direction : Direction.values()) {
             freezeExpend.put(direction, false);
-            fecOptional.put(direction, LazyOptional.of(() -> new StorageEnergyConnection(this, direction)));
+            energyStorages.put(direction, new StorageEnergyConnection(this, direction));
         }
     }
 
     @Override
-    public void saveAdditional(@NotNull CompoundTag nbt) {
-        super.saveAdditional(nbt);
+    protected void saveAdditional(@NotNull CompoundTag nbt, HolderLookup.@NotNull Provider registries) {
+        super.saveAdditional(nbt, registries);
         nbt.putDouble("energy", energy);
     }
 
     @Override
-    public void load(@NotNull CompoundTag tag) {
-        super.load(tag);
+    protected void loadAdditional(@NotNull CompoundTag tag, HolderLookup.@NotNull Provider registries) {
+        super.loadAdditional(tag, registries);
         energy = tag.getDouble("energy");
-    }
-
-    @Override
-    @Nonnull
-    public <T> LazyOptional<T> getCapability(@NotNull Capability<T> capability, @Nullable Direction direction) {
-        if (capability == ForgeCapabilities.ENERGY) {
-            return fecOptional.get(direction != null ? direction : Direction.UP).cast();
-        }
-        return super.getCapability(capability, direction);
     }
 
     public static <T extends BlockEntity> void tick(T tile) {
@@ -88,8 +75,8 @@ public class StorageEntity extends BlockEntity implements ICapabilityProvider {
                 }
                 continue;
             }
-            IEnergyStorage storage = entity.getCapability(ForgeCapabilities.ENERGY, direction.getOpposite()).resolve().filter(IEnergyStorage::canReceive).orElse(null);
-            if (storage == null) {
+            IEnergyStorage storage = level.getCapability(Capabilities.EnergyStorage.BLOCK, pos, direction.getOpposite());
+            if (storage == null || !storage.canReceive()) {
                 continue;
             }
             for (int i = 0; i < config.getStorageTransmissionCount(); i++) {
@@ -134,5 +121,9 @@ public class StorageEntity extends BlockEntity implements ICapabilityProvider {
 
     public void freeze(Direction direction) {
         this.freezeExpend.put(direction, true);
+    }
+
+    public StorageEnergyConnection getEnergyStorage(Direction direction) {
+        return energyStorages.get(direction != null ? direction : Direction.UP);
     }
 }

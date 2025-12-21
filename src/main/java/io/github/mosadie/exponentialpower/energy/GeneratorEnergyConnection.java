@@ -1,7 +1,7 @@
 package io.github.mosadie.exponentialpower.energy;
 
 import io.github.mosadie.exponentialpower.entities.GeneratorEntity;
-import net.minecraftforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.energy.IEnergyStorage;
 
 public class GeneratorEnergyConnection implements IEnergyStorage {
     private final GeneratorEntity owner;
