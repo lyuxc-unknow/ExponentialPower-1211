@@ -47,8 +47,6 @@ public class GeneratorBlock extends Block implements EntityBlock {
         if (!level.isClientSide) {
             if (level.getBlockEntity(pos) instanceof GeneratorEntity entity) {
                 player.openMenu(new GUIMenuProvider(entity), entity.getBlockPos());
-            } else {
-                throw new IllegalStateException("Our named container provider is missing!");
             }
         }
         return InteractionResult.SUCCESS;

@@ -1,9 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "group": "advanced_ender_storage",
   "key": {
     "D": {
-      "item": "minecraft:diamond_block"
+      "tag": "c:storage_blocks/diamond"
     },
     "S": {
       "item": "exponentialpower:ender_storage"
@@ -18,6 +17,6 @@
     "DSD"
   ],
   "result": {
-    "item": "exponentialpower:advanced_ender_storage"
+    "id": "exponentialpower:advanced_ender_storage"
   }
 }

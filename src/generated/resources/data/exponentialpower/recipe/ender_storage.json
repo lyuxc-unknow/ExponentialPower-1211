@@ -1,12 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "group": "ender_storage",
   "key": {
     "D": {
-      "item": "minecraft:diamond_block"
+      "tag": "c:storage_blocks/diamond"
     },
     "O": {
-      "tag": "forge:obsidian"
+      "tag": "c:obsidians"
     },
     "P": {
       "item": "minecraft:dark_prismarine"
@@ -21,6 +20,6 @@
     "DOD"
   ],
   "result": {
-    "item": "exponentialpower:ender_storage"
+    "id": "exponentialpower:ender_storage"
   }
 }

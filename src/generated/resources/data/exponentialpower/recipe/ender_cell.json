@@ -1,9 +1,8 @@
 {
   "type": "minecraft:crafting_shaped",
-  "group": "ender_cell",
   "key": {
     "D": {
-      "item": "minecraft:diamond_block"
+      "tag": "c:storage_blocks/diamond"
     },
     "I": {
       "item": "minecraft:ender_eye"
@@ -21,6 +20,6 @@
     "DPD"
   ],
   "result": {
-    "item": "exponentialpower:ender_cell"
+    "id": "exponentialpower:ender_cell"
   }
 }

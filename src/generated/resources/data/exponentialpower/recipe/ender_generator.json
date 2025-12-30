@@ -1,12 +1,11 @@
 {
   "type": "minecraft:crafting_shaped",
-  "group": "ender_generator",
   "key": {
     "D": {
-      "item": "minecraft:diamond_block"
+      "tag": "c:storage_blocks/diamond"
     },
     "O": {
-      "tag": "forge:obsidian"
+      "tag": "c:obsidians"
     },
     "c": {
       "item": "exponentialpower:ender_cell"
@@ -21,6 +20,6 @@
     "DOn"
   ],
   "result": {
-    "item": "exponentialpower:ender_generator"
+    "id": "exponentialpower:ender_generator"
   }
 }
