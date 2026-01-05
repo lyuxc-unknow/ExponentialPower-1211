@@ -1,13 +1,11 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "enderstorage": {
+    "has_ender_storage": {
       "conditions": {
         "items": [
           {
-            "items": [
-              "exponentialpower:advanced_ender_storage"
-            ]
+            "items": "exponentialpower:ender_storage"
           }
         ]
       },
@@ -22,8 +20,8 @@
   },
   "requirements": [
     [
-      "enderstorage",
-      "has_the_recipe"
+      "has_the_recipe",
+      "has_ender_storage"
     ]
   ],
   "rewards": {

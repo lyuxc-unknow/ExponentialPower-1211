@@ -1,5 +1,6 @@
 package io.github.mosadie.exponentialpower;
 
+import io.github.mosadie.exponentialpower.datagen.DataGeneration;
 import io.github.mosadie.exponentialpower.items.ItemManager;
 import io.github.mosadie.exponentialpower.setup.ClientSetup;
 import io.github.mosadie.exponentialpower.setup.Registration;
@@ -17,6 +18,7 @@ public class ExponentialPower {
     public ExponentialPower(ModContainer modContainer, IEventBus modEventBus) {
         Config.init(modContainer);
         Registration.init(modEventBus);
+        modEventBus.addListener(DataGeneration::generation);
         modEventBus.addListener(ClientSetup::registerScreens);
         ItemManager.init(modEventBus);
     }

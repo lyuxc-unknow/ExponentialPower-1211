@@ -1,25 +1,27 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "misc",
   "key": {
     "D": {
       "tag": "c:storage_blocks/diamond"
+    },
+    "E": {
+      "item": "exponentialpower:ender_cell"
     },
     "O": {
       "tag": "c:obsidians"
     },
     "P": {
       "item": "minecraft:dark_prismarine"
-    },
-    "c": {
-      "item": "exponentialpower:ender_cell"
     }
   },
   "pattern": [
     "DOD",
-    "PcP",
+    "PEP",
     "DOD"
   ],
   "result": {
+    "count": 1,
     "id": "exponentialpower:ender_storage"
   }
 }

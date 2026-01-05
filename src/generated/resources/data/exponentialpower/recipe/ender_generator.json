@@ -1,25 +1,27 @@
 {
   "type": "minecraft:crafting_shaped",
+  "category": "misc",
   "key": {
     "D": {
       "tag": "c:storage_blocks/diamond"
     },
-    "O": {
-      "tag": "c:obsidians"
-    },
-    "c": {
+    "E": {
       "item": "exponentialpower:ender_cell"
     },
-    "n": {
-      "item": "minecraft:netherite_ingot"
+    "N": {
+      "tag": "c:ingots/netherite"
+    },
+    "O": {
+      "tag": "c:obsidians"
     }
   },
   "pattern": [
-    "nOD",
-    "OcO",
-    "DOn"
+    "NOD",
+    "OEO",
+    "DON"
   ],
   "result": {
+    "count": 1,
     "id": "exponentialpower:ender_generator"
   }
 }

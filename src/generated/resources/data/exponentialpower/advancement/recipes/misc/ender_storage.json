@@ -1,13 +1,11 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "endercell": {
+    "has_ender_cell": {
       "conditions": {
         "items": [
           {
-            "items": [
-              "exponentialpower:ender_cell"
-            ]
+            "items": "exponentialpower:ender_cell"
           }
         ]
       },
@@ -15,20 +13,20 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "exponentialpower:ender_generator"
+        "recipe": "exponentialpower:ender_storage"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
   },
   "requirements": [
     [
-      "endercell",
-      "has_the_recipe"
+      "has_the_recipe",
+      "has_ender_cell"
     ]
   ],
   "rewards": {
     "recipes": [
-      "exponentialpower:ender_generator"
+      "exponentialpower:ender_storage"
     ]
   }
 }
